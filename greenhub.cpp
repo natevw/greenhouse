@@ -44,13 +44,12 @@ void loop(void) {
         }
     }
     
-    // TODO: check for "F" keypress and send feed?
     char key = '\0';
     ssize_t res = read(STDIN_FILENO, &key, 1);
 #ifdef DEBUG
-    printf("key=%c, res=%i, errno=%i\n", key, res, errno);
+    //printf("key=%c, res=%i, errno=%i\n", key, res, errno);
 #endif
-    if (res && key == 'F' || key == 'B') {
+    if (res && (key == 'F' || key == 'B')) {
         uint32_t command[8] = {0};
         strcpy((char*)command, "n8vw");
         command[1] = (key == 'F') ? 0xFEED : 0x05EE;
@@ -62,8 +61,7 @@ void loop(void) {
 #endif
     }
     
-    sleep(1);
-	//usleep(20);
+    usleep(0.05e6);
 }
 
 int main(int argc, char** argv) {
