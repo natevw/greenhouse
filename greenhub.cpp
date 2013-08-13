@@ -1,26 +1,3 @@
-/* 
- *
- *  Filename : rpi-hub.cpp
- *
- *  This program makes the RPi as a hub listening to all six pipes from the remote 
- *  sensor nodes ( usually Arduino  or RPi ) and will return the packet back to the 
- *  sensor on pipe0 so that the sender can calculate the round trip delays
- *  when the payload matches.
- *  
- *  Refer to RF24/examples/rpi_hub_arduino/ for the corresponding Arduino sketches 
- * to work with this code.
- *  
- *  CE is connected to GPIO25
- *  CSN is connected to GPIO8 
- *
- *  Refer to RPi docs for GPIO numbers
- *
- *  Author : Stanley Seow
- *  e-mail : stanleyseow@gmail.com
- *  date   : 4th Apr 2013
- *
- */
-
 #include <cstdlib>
 #include <iostream>
 #include <cerrno>
