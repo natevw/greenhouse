@@ -5,6 +5,8 @@
 
 #include "config.h"
 
+#define DEBUG
+
 using namespace std;
 
 // CE and CSN pins On header using GPIO numbering (not pin numbers)
@@ -12,6 +14,11 @@ RF24 radio("/dev/spidev0.0",8000000,25);  // Setup for GPIO 25 CSN
 
 
 void setup(void) {
+    // configure non-blocking stdin
+    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
+    flags |= O_NONBLOCK;
+    fcntl(STDIN_FILENO, F_SETFL, flags);
+
 	radio.begin();
     radio.enableDynamicPayloads();
     radio.setDataRate(CONFIG_RF_DATARATE);
@@ -40,7 +47,21 @@ void loop(void) {
     // TODO: check for "F" keypress and send feed?
     char key = '\0';
     ssize_t res = read(STDIN_FILENO, &key, 1);
-    printf("key=%c, res=%i, errno=%i", key, res, errno);
+#ifdef DEBUG
+    printf("key=%c, res=%i, errno=%i\n", key, res, errno);
+#endif
+    if (res && key == 'F' || key == 'B') {
+        uint32_t command[8] = {0};
+        strcpy((char*)command, "n8vw");
+        command[1] = (key == 'F') ? 0xFEED : 0x05EE;
+        radio.stopListening();
+        bool ok = radio.write(command, 32);
+        radio.startListening();
+#ifdef DEBUG
+    printf("Command send success: %i\n", ok);
+#endif
+    }
+    
     sleep(1);
 	//usleep(20);
 }
