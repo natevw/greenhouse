@@ -4,13 +4,12 @@
 #include <OneWire.h>
 #include "printf.h"
 
+#include "config.h"
+
 //#define DEBUG
 
 #define rfCE 9
 #define rfCS 10
-
-const uint8_t rfChannel = 76;
-const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0x7365727631LL };
 
 const unsigned long broadcastInterval = 5e3;
 const unsigned long switchTimeout = 60e3;
@@ -45,13 +44,13 @@ void setup() {
 
   radio.begin();
   radio.enableDynamicPayloads();
-  radio.setDataRate(RF24_1MBPS);
+  radio.setDataRate(CONFIG_RF_DATARATE);
   radio.setPALevel(RF24_PA_MAX);
-  radio.setChannel(rfChannel);
+  radio.setChannel(CONFIG_RF_CHANNEL);
   radio.setRetries(15,15);
 
-  radio.openWritingPipe(pipes[0]); 
-  radio.openReadingPipe(1,pipes[1]); 
+  radio.openWritingPipe(CONFIG_HUB_RX_PIPE); 
+  radio.openReadingPipe(1,CONFIG_HUB_TX_PIPE); 
 
 #ifdef DEBUG
   radio.printDetails();
