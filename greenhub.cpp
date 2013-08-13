@@ -23,6 +23,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <cerrno>
 #include "RF24.h"
 
 #include "config.h"
@@ -53,8 +54,8 @@ void loop(void) {
     if (radio.available()) {
         uint32_t receivedBroadcast[8] = {0};    // declare in 4-byte blocks for mnemonic ease
         uint8_t len = radio.getDynamicPayloadSize();
-        bool ok = radio.read(command, len);
-        if (ok && strncmp((char*)command, "aqua", 4) == 0) {
+        bool ok = radio.read(receivedBroadcast, len);
+        if (ok && strncmp((char*)receivedBroadcast, "aqua", 4) == 0) {
             printf("Received broadcast: now=%i switchAugerCount=%i remoteAugerCount=%i\n", receivedBroadcast[1], receivedBroadcast[2], receivedBroadcast[3]);
         }
     }

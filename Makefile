@@ -8,7 +8,7 @@ SOURCES = ${PROGRAMS:=.cpp}
 all: ${PROGRAMS}
 
 ${PROGRAMS}: ${SOURCES}
-	g++ ${CCFLAGS} -Wall -L../librf24/  -lrf24 $@.cpp -o $@
+	g++ ${CCFLAGS} -Wall -I../librf24/ -L../librf24/ -lrf24 $@.cpp -o $@
 
 clean:
 	rm -rf $(PROGRAMS)
