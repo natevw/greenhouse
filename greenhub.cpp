@@ -40,6 +40,10 @@ void loop(void) {
         uint8_t len = radio.getDynamicPayloadSize();
         bool ok = radio.read(receivedBroadcast, len);
         if (ok && strncmp((char*)receivedBroadcast, "aqua", 4) == 0) {
+            time_t t; time(&t);
+            tm t_parts; gmtime_r(&t, &t_parts);            
+            char timebuff[24]; strftime(timebuff, sizeof(timebuff), "%Y-%m-%dT%H:%M:%SZ", &t_parts);
+            printf("%s ", timebuff);
             printf("Received broadcast: now=%i switchAugerCount=%i remoteAugerCount=%i\n", receivedBroadcast[1], receivedBroadcast[2], receivedBroadcast[3]);
         }
     }
