@@ -10,7 +10,7 @@
 
 #define rfCE 9
 #define rfCS 10
-const unsigned long broadcastInterval = 5e3;
+const unsigned long broadcastInterval = 1e3;
 RF24 radio(rfCE, rfCS);
 
 #define augerPin 3
@@ -79,20 +79,20 @@ void runAuger(unsigned ms) {
 #endif
 }
 
-void waterTemp() {
+uint16_t waterTemp() {
   // see http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
   
-  tankTemp.reset();
-  /*
-  tankTemp.select(tankTempAddr);
-  tankTemp.write(0x44,1);         // start conversion, with parasite power on at the end
-  delay(1000);     // maybe 750ms is enough, maybe not
-  bool present = tankTemp.reset();
-  */
   
-  //tankTemp.select(tankTempAddr);
-  tankTemp.skip();
-  tankTemp.write(0xBE);         // Read Scratchpad
+  // request convert T and wait to settle
+  tankTemp.reset();
+  tankTemp.select(tankTempAddr);
+  tankTemp.write(0x44,1);
+  delay(750);     // Tconv time for 12-bit resolution
+  
+  // request scratchpad read
+  tankTemp.reset();
+  tankTemp.select(tankTempAddr);
+  tankTemp.write(0xBE);
   
   byte data[12];
   for (uint8_t i = 0; i < 9; i++) {           // only "need" first two bytes, but CRC is sent
@@ -100,11 +100,11 @@ void waterTemp() {
     //Serial.print(data[i], HEX);
     //Serial.print(" ");
   }
-  //Serial.print(" CRC=");
-  //Serial.print( OneWire::crc8( data, 8), HEX);
+  
+  byte crc = OneWire::crc8(data, 8);
   
   // TODO: trigger update based on next broadcast - Tconv?
-  
+  return (data[8] == crc) ? *(uint16_t*)data : 0;
 }
 
 
@@ -139,8 +139,8 @@ void loop() {
     broadcastMessage[1] = now;
     broadcastMessage[2] = switchAugerCount;
     broadcastMessage[3] = remoteAugerCount;
-    // TODO: gather temp/humid data
-    waterTemp();
+    broadcastMessage[4] = waterTemp();
+    // TODO: gather air temp/humid data
     
     radio.stopListening();
     bool ok = radio.write(broadcastMessage, 32);
