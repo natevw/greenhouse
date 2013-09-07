@@ -20,7 +20,7 @@ RF24 radio(rfCE, rfCS);
 Servo auger;
 
 #define switchPin 4
-const unsigned long switchTimeout = 60e3;
+const unsigned long switchTimeout = 2e3;
 
 #define tankTempPin 7
 const uint8_t tankTempAddr[] = {0x28, 0x94, 0xDB, 0xE6, 0x03, 0x00, 0x00, 0xF9};
