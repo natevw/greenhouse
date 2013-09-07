@@ -6,34 +6,28 @@
 
 #include "config.h"
 
-//#define DEBUG
+#define DEBUG
 
 #define rfCE 9
 #define rfCS 10
-
 const unsigned long broadcastInterval = 5e3;
-const unsigned long switchTimeout = 60e3;
+RF24 radio(rfCE, rfCS);
 
 #define augerPin 3
-#define switchPin 4
-
-
-#define tankTempPin 7
-//const uint8_t addr[] = {0x28, 0x94, 0xDB, 0xE6 0x03 0x00 0x00 0xF9};
-
-#define humidityPin 2
-/*
-#define airTempPin 6
-
-*/
-
-// listen for: switch pulls, auger request
-// broadcast: pull count, temp/humid readings
-
-RF24 radio(rfCE, rfCS);
-OneWire tankTemp(tankTempPin);
+#define AUGER_FEED 0
+#define AUGER_BACK 4500
+#define AUGER_STOP 1500
 Servo auger;
 
+#define switchPin 4
+const unsigned long switchTimeout = 60e3;
+
+#define tankTempPin 7
+const uint8_t tankTempAddr[] = {0x28, 0x94, 0xDB, 0xE6, 0x03, 0x00, 0x00, 0xF9};
+OneWire tankTemp(tankTempPin);
+
+#define humidityPin 2
+#define airTempPin 6
 
 void setup() {
 #ifdef DEBUG
@@ -47,6 +41,7 @@ void setup() {
   radio.setDataRate(CONFIG_RF_DATARATE);
   radio.setPALevel(RF24_PA_MAX);
   radio.setChannel(CONFIG_RF_CHANNEL);
+  radio.setAutoAck(true);
   radio.setRetries(15,15);
 
   radio.openWritingPipe(CONFIG_HUB_RX_PIPE); 
@@ -66,26 +61,50 @@ uint32_t remoteAugerCount = 0;
 unsigned long nextSwitchAllowed = 0;
 unsigned long nextBroadcastTime = 0;
 
-void runAuger() {
+void runAuger(unsigned ms) {
+  unsigned count = ms / 1000;
+  unsigned leftover = ms % 1000;
 #ifdef DEBUG
-  printf("Starting auger.\n");
+  printf("Running auger for %ums (%u count + %u leftover).\n", ms, count, leftover);
 #endif
-  auger.writeMicroseconds(4500); delay(500);  // cw to prevent jam
-  auger.writeMicroseconds(0); delay(2000);    // ccw to feed
-  auger.writeMicroseconds(1500);              // stop
+  auger.writeMicroseconds(AUGER_BACK); delay(125);       // cw to prevent jam
+  auger.writeMicroseconds(AUGER_FEED); delay(leftover);  // ccw to feed
+  for (unsigned i = 0; i < count; ++i) {
+    auger.writeMicroseconds(AUGER_BACK); delay(125);
+    auger.writeMicroseconds(AUGER_FEED); delay(875);
+  }
+  auger.writeMicroseconds(AUGER_STOP);
 #ifdef DEBUG
   printf("Auger stopped.\n");
 #endif
 }
 
 void waterTemp() {
+  // see http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
+  
+  tankTemp.reset();
   /*
-  ds.reset();
-  ds.select(addr);
-  ds.write(0x44,1);         // start conversion, with parasite power on at the end
+  tankTemp.select(tankTempAddr);
+  tankTemp.write(0x44,1);         // start conversion, with parasite power on at the end
   delay(1000);     // maybe 750ms is enough, maybe not
-  ds.reset();
+  bool present = tankTemp.reset();
   */
+  
+  //tankTemp.select(tankTempAddr);
+  tankTemp.skip();
+  tankTemp.write(0xBE);         // Read Scratchpad
+  
+  byte data[12];
+  for (uint8_t i = 0; i < 9; i++) {           // only "need" first two bytes, but CRC is sent
+    data[i] = tankTemp.read();
+    //Serial.print(data[i], HEX);
+    //Serial.print(" ");
+  }
+  //Serial.print(" CRC=");
+  //Serial.print( OneWire::crc8( data, 8), HEX);
+  
+  // TODO: trigger update based on next broadcast - Tconv?
+  
 }
 
 
@@ -100,8 +119,9 @@ void loop() {
       switch (command[1]) {
         case 0xFEED:
           remoteAugerCount += 1;
-          runAuger();
+          runAuger(750);
           // fall through to trigger broadcast
+          break;
         case 0x05EE:
           nextBroadcastTime = now;
           break;
@@ -120,6 +140,7 @@ void loop() {
     broadcastMessage[2] = switchAugerCount;
     broadcastMessage[3] = remoteAugerCount;
     // TODO: gather temp/humid data
+    waterTemp();
     
     radio.stopListening();
     bool ok = radio.write(broadcastMessage, 32);
@@ -133,6 +154,6 @@ void loop() {
   if (now >= nextSwitchAllowed && digitalRead(switchPin)) {
     nextSwitchAllowed = now + switchTimeout;
     switchAugerCount += 1;
-    runAuger();
+    runAuger(250);
   }
 }
