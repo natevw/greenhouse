@@ -82,13 +82,6 @@ void runAuger(unsigned ms) {
 uint16_t waterTemp() {
   // see http://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
   
-  
-  // request convert T and wait to settle
-  tankTemp.reset();
-  tankTemp.select(tankTempAddr);
-  tankTemp.write(0x44,1);
-  delay(750);     // Tconv time for 12-bit resolution
-  
   // request scratchpad read
   tankTemp.reset();
   tankTemp.select(tankTempAddr);
@@ -100,10 +93,14 @@ uint16_t waterTemp() {
     //Serial.print(data[i], HEX);
     //Serial.print(" ");
   }
-  
   byte crc = OneWire::crc8(data, 8);
   
-  // TODO: trigger update based on next broadcast - Tconv?
+  // request convert T for next broadcast
+  tankTemp.reset();
+  tankTemp.select(tankTempAddr);
+  tankTemp.write(0x44,1);
+  //delay(750);     // Tconv time for 12-bit resolution
+  
   return (data[8] == crc) ? *(uint16_t*)data : 0;
 }
 
