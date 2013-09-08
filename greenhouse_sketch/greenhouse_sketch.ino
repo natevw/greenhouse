@@ -27,7 +27,7 @@ const uint8_t tankTempAddr[] = {0x28, 0x94, 0xDB, 0xE6, 0x03, 0x00, 0x00, 0xF9};
 OneWire tankTemp(tankTempPin);
 
 #define humidityPin 2
-#define airTempPin 6
+#define airTempPin A0
 
 void setup() {
 #ifdef DEBUG
@@ -152,6 +152,7 @@ void loop() {
     broadcastMessage[3] = remoteAugerCount;
     broadcastMessage[4] = waterTemp();
     broadcastMessage[5] = humidityLevel();
+    broadcastMessage[6] = analogRead(airTempPin);
     // TODO: gather air temp
 
 #ifdef DEBUG
