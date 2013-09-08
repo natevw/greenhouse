@@ -104,6 +104,20 @@ uint16_t waterTemp() {
   return (data[8] == crc) ? *(uint16_t*)data : 0;
 }
 
+uint32_t humidityLevel() {          // for RC circuit
+  // charge the capacitive sensor
+  pinMode(humidityPin, OUTPUT);
+  digitalWrite(humidityPin, HIGH);
+  delay(1);
+  
+  // time how long until charge drains
+  pinMode(humidityPin, INPUT);
+  digitalWrite(humidityPin, LOW);
+  unsigned long start = micros();
+  while (digitalRead(humidityPin)) ;
+  return micros() - start;
+}
+
 
 void loop() {
   unsigned long now = millis();
@@ -137,7 +151,14 @@ void loop() {
     broadcastMessage[2] = switchAugerCount;
     broadcastMessage[3] = remoteAugerCount;
     broadcastMessage[4] = waterTemp();
-    // TODO: gather air temp/humid data
+    broadcastMessage[5] = humidityLevel();
+    // TODO: gather air temp
+
+#ifdef DEBUG
+    printf("broadcastMessage");
+    for (unsigned i = 1; i < 8; ++i) printf(" %u", broadcastMessage[i]);
+    printf("\n");
+#endif
     
     radio.stopListening();
     bool ok = radio.write(broadcastMessage, 32);
