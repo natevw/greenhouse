@@ -10,7 +10,7 @@
 
 #define rfCE 9
 #define rfCS 10
-const unsigned long broadcastInterval = 1e3;
+const unsigned long broadcastInterval = 5e3;
 RF24 radio(rfCE, rfCS);
 
 #define augerPin 3
