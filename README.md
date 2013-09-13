@@ -24,3 +24,19 @@ TBD: make web-accessible via [microstates](https://github.com/natevw/microstates
     git clone https://github.com/natevw/greenhouse.git
     cd greenhouse && make
     sudo LD_LIBRARY_PATH=../librf24:$LD_LIBRARY_PATH ./greenhub
+
+## Hack-ity poke-ity
+
+For some undiagnosed reason, the listener on the Raspberry Pi side "stops working" until any command is sent. So here's how I'm automatically sending a B keypress to keep it logging:
+
+    # via http://serverfault.com/a/407923/123535
+    mkfifo rx_hack.fifo
+    # I run this in `screen`…
+    cat >rx_hack.fifo &
+    cat rx_hack.fifo | sudo LD_LIBRARY_PATH=../librf24:$LD_LIBRARY_PATH stdbuf -i0 -o0 ./greenhub | tee -a green.log
+
+    crontab -e
+    
+        */5 * * * * echo "B" > radio/greenhouse/rx_hack.fifo
+
+
