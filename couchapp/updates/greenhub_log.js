@@ -7,7 +7,7 @@ function (doc, req) {
     // "successfully" ignore lines that don't look like logs, to keep linepost running
     if (isNaN(recvd.getTime())) return [null, {code:200,body:"Ignoring invalid message"}];
     
-    var doc = {_id:'gnhb-'+recvd.getTime()};
+    var doc = {_id:'gnhb-'+recvd.getTime(), 'com.stemstorage.greenhub_log':true};
     doc.timestamp = parts[0];
     parts.slice(1).forEach(function (part) {
         var kv = part.split('=');
