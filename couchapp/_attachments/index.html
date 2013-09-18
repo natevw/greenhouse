@@ -1,0 +1,23 @@
+<!doctype html>
+<html><head>
+    <meta charset="UTF-8">
+    <title>Greenhouse Graphs</title>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="/dev/_design/maps/fermata.min.js"></script>
+</head><body>
+
+<script>
+    var ddoc = fermata.json('.');
+    ddoc(['_view/humidity_by_date'], {group_level:5}).get(function (e,d) {
+        var D = d;
+        d3.select(document.body).append('svg').attr('width', 450).attr('height', 350).call(function (sel) {
+            sel.selectAll('circle').data(d.rows).call(function (sel) {
+                sel.enter().append('circle').attr('r', 2);
+                sel.exit().remove();
+                sel.attr('cx', function (d,i) { return 450 * i / D.rows.length; });
+                sel.attr('cy', function (d,i) { return d.value.sum / d.value.count / 28840; });
+            });
+        });
+    });
+</script>
+</body></html>
