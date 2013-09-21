@@ -17,7 +17,7 @@
             types = Object.keys(groups).sort(),
             colors = d3.scale.category10(),
             scales = types.map(function (t) {
-                var arr = groups[t].filter(function (d,i) { return groups['nc'][i].value.sum === 0; }),
+                var arr = groups[t],
                     // HACK: we have some data glitches. filter out points where nc read, and use min rather than avg for ext
                     ext = d3.extent(arr, function (d) { d.value.avg = d.value.sum / d.value.count; return d.value.min; });
                 ext[0] = 0;      // override all scales to start at 0 [could just use d3.max above then…]
@@ -37,7 +37,7 @@
                         sel.selectAll('circle').data(function (d) { return groups[d]; }).call(function (sel) {
                             sel.enter().append('circle').attr('r', 2);
                             sel.attr('cx', function (d,i,j) { return scales[j].x(i); });
-                            sel.attr('cy', function (d,i,j) { return scales[j].y(d.value.sum / d.value.count); });
+                            sel.attr('cy', function (d,i,j) { return scales[j].y(d.value.avg); });
                         });                
                     });
                 });
