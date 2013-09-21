@@ -9,13 +9,14 @@ function (doc, req) {
     
     var doc = {_id:'gnhb-'+recvd.getTime(), 'com.stemstorage.greenhub_log':true};
     doc.timestamp = parts[0];
+    doc.data = {};
     parts.slice(1).forEach(function (part) {
         var kv = part.split('=');
         if (kv.length !== 2) return;
         var k = kv[0],
             vN = +kv[1],
             v = isNaN(vN) ? kv[1] : vN;
-        doc[k] = v;
+        doc.data[k] = v;
     });
     return [doc, "om nom nom nom"];
 }

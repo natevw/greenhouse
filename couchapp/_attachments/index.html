@@ -4,18 +4,47 @@
     <title>Greenhouse Graphs</title>
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script src="/dev/_design/maps/fermata.min.js"></script>
+    <style>
+        li small { margin-left: 1ex; }
+    </style>
 </head><body>
 
 <script>
-    var ddoc = fermata.json('.');
-    ddoc(['_view/humidity_by_date'], {group_level:5}).get(function (e,d) {
-        var D = d;
-        d3.select(document.body).append('svg').attr('width', 450).attr('height', 350).call(function (sel) {
-            sel.selectAll('circle').data(d.rows).call(function (sel) {
-                sel.enter().append('circle').attr('r', 2);
-                sel.exit().remove();
-                sel.attr('cx', function (d,i) { return 450 * i / D.rows.length; });
-                sel.attr('cy', function (d,i) { return d.value.sum / d.value.count / 28840; });
+    var ddoc = fermata.json('.'),
+        W = 450, H = 350;
+    ddoc(['_view/values_by_type_then_date'], {group_level:5,stale:'update_after'}).get(function (e,d) {
+        var groups = d3.nest().key(function (d) { return d.key[0]; }).map(d.rows),
+            types = Object.keys(groups).sort(),
+            colors = d3.scale.category10(),
+            scales = types.map(function (t) {
+                var arr = groups[t].filter(function (d,i) { return groups['nc'][i].value.sum === 0; }),
+                    // HACK: we have some data glitches. filter out points where nc read, and use min rather than avg for ext
+                    ext = d3.extent(arr, function (d) { d.value.avg = d.value.sum / d.value.count; return d.value.min; });
+                ext[0] = 0;      // override all scales to start at 0 [could just use d3.max above then…]
+                
+                return {
+                    x: d3.scale.linear().domain([0,arr.length]).range([0,W]),
+                    y: d3.scale.linear().domain(ext).range([H,0])
+                };
+            });
+        
+        d3.select(document.body).call(function (sel) {
+            sel.append('svg').attr('width', W).attr('height', H).call(function (sel) {
+                sel.selectAll('g').data(types).call(function (sel) {
+                    sel.enter().append('g').call(function (sel) {
+                        sel.attr('title', function (d,i) { return types[i]; })
+                        sel.attr('fill', function (d,i) { return colors(i); })
+                        sel.selectAll('circle').data(function (d) { return groups[d]; }).call(function (sel) {
+                            sel.enter().append('circle').attr('r', 2);
+                            sel.attr('cx', function (d,i,j) { return scales[j].x(i); });
+                            sel.attr('cy', function (d,i,j) { return scales[j].y(d.value.sum / d.value.count); });
+                        });                
+                    });
+                });
+            });
+            sel.append('ul').selectAll('li').data(types).call(function (sel) {
+                sel.enter().append('li').style('color', function (d,i) { return colors(i); }).text(String)
+                    .append('small').text(function (d,i) { return JSON.stringify(scales[i].y.domain()); });
             });
         });
     });
