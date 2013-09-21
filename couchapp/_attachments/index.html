@@ -12,7 +12,7 @@
 <script>
     var ddoc = fermata.json('.'),
         W = 450, H = 350;
-    ddoc(['_view/values_by_type_then_date'], {group_level:5,stale:'update_after'}).get(function (e,d) {
+    ddoc(['_view/values_by_type_then_date'], {group_level:6,stale:'update_after'}).get(function (e,d) {
         var groups = d3.nest().key(function (d) { return d.key[0]; }).map(d.rows),
             types = Object.keys(groups).sort(),
             colors = d3.scale.category10(),
@@ -21,6 +21,17 @@
                     // HACK: we have some data glitches. filter out points where nc read, and use min rather than avg for ext
                     ext = d3.extent(arr, function (d) { d.value.avg = d.value.sum / d.value.count; return d.value.min; });
                 ext[0] = 0;      // override all scales to start at 0 [could just use d3.max above then…]
+                
+                // HACK: hardcode sensible ranges for when group_level increases and min value no longer happens to be sane
+                switch (t) {
+                    case 'airTemp': ext=[0,265]; break;
+                    case 'humidity': ext=[0,8319084]; break;
+                    case 'nc': ext=[0,0]; break;
+                    case 'now': ext=[0,1126940536]; break;
+                    case 'remoteAugerCount': ext=[0,0]; break;
+                    case 'switchAugerCount': ext=[0,124]; break;
+                    case 'waterTemp': ext=[0,434]; break;
+                }
                 
                 return {
                     x: d3.scale.linear().domain([0,arr.length]).range([0,W]),
