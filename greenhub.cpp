@@ -44,7 +44,7 @@ void loop(void) {
             tm t_parts; gmtime_r(&t, &t_parts);            
             char timebuff[24]; strftime(timebuff, sizeof(timebuff), "%Y-%m-%dT%H:%M:%SZ", &t_parts);
             printf("%s ", timebuff);
-            printf("Received broadcast: now=%u switchAugerCount=%u remoteAugerCount=%u, waterTemp=%u, humidty=%u, airTemp=%u, nc=%u\n",
+            printf("Received broadcast: now=%u switchAugerCount=%u remoteAugerCount=%u waterTemp=%u humidity=%u airTemp=%u nc=%u\n",
                 receivedBroadcast[1], receivedBroadcast[2], receivedBroadcast[3], receivedBroadcast[4], receivedBroadcast[5], receivedBroadcast[6], receivedBroadcast[7]);
         }
     }
