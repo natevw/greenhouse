@@ -39,4 +39,4 @@ For some undiagnosed reason, the listener on the Raspberry Pi side "stops workin
     
         */5 * * * * echo "B" > radio/greenhouse/rx_hack.fifo
 
-
+I then use [linepost](https://github.com/natevw/linepost) to pipe the logs to CouchDB, e.g. `tail -f green.log | linepost http://localhost:5984/greenhub/_design/greenhouse/_update/greenhub_log`.
