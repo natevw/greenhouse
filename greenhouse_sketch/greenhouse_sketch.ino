@@ -51,8 +51,11 @@ void setup() {
   radio.setAutoAck(true);
   radio.setRetries(15,15);
 
-  radio.openWritingPipe(CONFIG_HUB_RX_PIPE); 
-  radio.openReadingPipe(1,CONFIG_HUB_TX_PIPE); 
+  radio.openWritingPipe(CONFIG_HUB_RX_PIPE);
+  radio.openReadingPipe(1,CONFIG_HUB_TX_PIPE);
+  
+  pinMode(aux1, OUTPUT);
+  pinMode(aux2, OUTPUT);
 
 #ifdef DEBUG
   radio.printDetails();
@@ -158,7 +161,7 @@ void loop() {
       }
     }
 #ifdef DEBUG
-    printf("Radio read success: %i, command: %i\n", ok, command[1]);
+    printf("Radio read success: %i, command: %x\n", ok, command[1]);
 #endif
   }
   
