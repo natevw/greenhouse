@@ -73,7 +73,6 @@ void loop(void) {
             default:
                 goto wait;
         }
-        command[1] = (key == 'F') ? 0xFEED : 0x05EE;
         radio.stopListening();
         bool ok = radio.write(command, 32);
         radio.startListening();
