@@ -13,21 +13,28 @@
 const unsigned long broadcastInterval = 5e3;
 RF24 radio(rfCE, rfCS);
 
-#define augerPin 3
+#define augerPin 5
 #define AUGER_FEED 0
 #define AUGER_BACK 4500
 #define AUGER_STOP 1500
 Servo auger;
 
-#define switchPin 4
-const unsigned long switchTimeout = 2e3;
+#define augerSwitch 6
+const unsigned long augerTimeout = 2e3;
 
 #define tankTempPin 7
 const uint8_t tankTempAddr[] = {0x28, 0x94, 0xDB, 0xE6, 0x03, 0x00, 0x00, 0xF9};
 OneWire tankTemp(tankTempPin);
 
 #define humidityPin 2
+
+// NOTE: these need http://web.archive.org/web/20130524110602/http://placeboaudio.com/how-tu-use-atmega-pb6-pb7-with-arduino-when-n
+// (summary: add two PB at end of digital_pin_to_port_PGM and BV(6), BV(7) at end of digital_pin_to_bit_mask_PGM in pins_arduino.h)
+#define aux1 20
+#define aux2 21
+
 #define airTempPin A0
+#define batteryBackup A1
 
 void setup() {
 #ifdef DEBUG
@@ -52,7 +59,7 @@ void setup() {
 #endif
   
   auger.attach(augerPin);
-  pinMode(switchPin, INPUT);
+  pinMode(augerSwitch, INPUT);
 }
 
 uint32_t switchAugerCount = 0;
@@ -136,6 +143,18 @@ void loop() {
         case 0x05EE:
           nextBroadcastTime = now;
           break;
+        case 0xAAA0:
+          digitalWrite(aux1, LOW);
+          break;
+        case 0xAAA1:
+          digitalWrite(aux1, HIGH);
+          break;
+        case 0xAAB0:
+          digitalWrite(aux2, LOW);
+          break;
+        case 0xAAB1:
+          digitalWrite(aux2, HIGH);
+          break;
       }
     }
 #ifdef DEBUG
@@ -151,9 +170,9 @@ void loop() {
     broadcastMessage[2] = switchAugerCount;
     broadcastMessage[3] = remoteAugerCount;
     broadcastMessage[4] = waterTemp();
-    broadcastMessage[5] = humidityLevel();
+    broadcastMessage[5] = 0; //humidityLevel();
     broadcastMessage[6] = analogRead(airTempPin);
-    // TODO: gather air temp
+    broadcastMessage[7] = analogRead(batteryBackup);
 
 #ifdef DEBUG
     printf("broadcastMessage");
@@ -170,8 +189,8 @@ void loop() {
 #endif
   }
   
-  if (now >= nextSwitchAllowed && digitalRead(switchPin)) {
-    nextSwitchAllowed = now + switchTimeout;
+  if (now >= nextSwitchAllowed && digitalRead(augerSwitch)) {
+    nextSwitchAllowed = now + augerTimeout;
     switchAugerCount += 1;
     runAuger(250);
   }

@@ -54,9 +54,25 @@ void loop(void) {
 #ifdef DEBUG
     //printf("key=%c, res=%i, errno=%i\n", key, res, errno);
 #endif
-    if (res && (key == 'F' || key == 'B')) {
+    if (res) {
         uint32_t command[8] = {0};
         strcpy((char*)command, "n8vw");
+        switch (key) {
+            case 'F':
+                command[1] = 0xFEED;
+                break;
+            case 'B':
+                command[1] = 0x05EE;
+                break;
+            case 'O':
+                command[1] = 0xAAA0;
+                break;
+            case 'I':
+                command[1] = 0xAAA1;
+                break;
+            default:
+                goto wait;
+        }
         command[1] = (key == 'F') ? 0xFEED : 0x05EE;
         radio.stopListening();
         bool ok = radio.write(command, 32);
@@ -65,7 +81,8 @@ void loop(void) {
     printf("Command send success: %i\n", ok);
 #endif
     }
-    
+
+wait:
     usleep(0.05e6);
 }
 
