@@ -10,7 +10,7 @@
 using namespace std;
 
 // CE and CSN pins On header using GPIO numbering (not pin numbers)
-RF24 radio("/dev/spidev0.0",8000000,25);  // Setup for GPIO 25 CSN
+RF24 radio("/dev/spidev0.0",8000000,24);  // Setup for GPIO 24 CE
 
 
 void setup(void) {
